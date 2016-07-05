@@ -84,5 +84,4 @@ public class User {
 	public void setDate_of_last_login(Date date_of_last_login) {
 		this.date_of_last_login = date_of_last_login;
 	}
-
 }
