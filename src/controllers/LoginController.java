@@ -1,6 +1,7 @@
 package controllers;
 
 import pojos.Error;
+import pojos.Success;
 import pojos.UserLogin;
 import security.Encrypt;
 
@@ -9,10 +10,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
 
 import json.JsonConverter;
 import mappers.UserMapper;
+import password.GmailSender;
+import password.PasswordGenerator;
 
 @RestController
 public class LoginController {
@@ -21,6 +28,7 @@ public class LoginController {
 	UserMapper usermapper;
 	JsonConverter jconverter;
 	Encrypt encrypter;
+	GmailSender emailSender;
 
 	@RequestMapping(value = "/login", method = RequestMethod.POST, headers = "Accept=application/json")
 	public String handleLogin(@RequestBody String jsonUserString,HttpSession session){
@@ -39,8 +47,7 @@ public class LoginController {
 				if (encrypter.compareEncryptedAndRaw(rawPassword, encryptedPassword)) {
 					session.setAttribute("user", dbUser.getEmail());
 					session.setMaxInactiveInterval(45);
-					//Now we need to give him session and return his data.
-					return "true";
+					return jconverter.ConvertObjectToJsonString(new Success("login", dbUser.getEmail())); 
 				}
 				return jconverter.ConvertObjectToJsonString(new Error("login","Password does not match."));
 			}
@@ -56,8 +63,18 @@ public class LoginController {
 		if (jsonUser != null) {
 			UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
 			if (dbUser != null) {
-				//Send email to the dbuser.getEmail();
-				return "";
+				String pswd = PasswordGenerator.GeneratePassword();
+				String encrypted = encrypter.encryptPassword(pswd);
+				try
+				{
+					usermapper.updatePassword(dbUser.getEmail(), encrypted);
+					emailSender.sendPassword(dbUser.getEmail(), pswd);
+					return jconverter.ConvertObjectToJsonString(new Success("forgottenPassword", dbUser.getEmail()));
+				}
+				catch(MessagingException | IOException e) {
+					e.printStackTrace();
+					return jconverter.ConvertObjectToJsonString(new Error("forgottenPassword", "unable to send email"));
+				}
 			}
 			return jconverter.ConvertObjectToJsonString(new Error("forgottenPassword","No user with this email."));
 		}
@@ -65,5 +82,12 @@ public class LoginController {
 	}
 	
 	@RequestMapping(value = "/keepalive", method = RequestMethod.POST)
-	public void dummyFunction() { }
+	public String dummyFunction(HttpSession session) {
+		if (session.getAttribute("user") == null)
+			return jconverter.ConvertObjectToJsonString(new Error("keepalive", "You are not logged in."));
+		UserLogin dbUser = usermapper.getUserLoginByEmail((String)session.getAttribute("user"));
+		if (dbUser == null)
+			return jconverter.ConvertObjectToJsonString(new Error("keepalive", "You are not logged in."));
+		return jconverter.ConvertObjectToJsonString(new Success("keepalive", dbUser.getEmail()));
+	}
 }
