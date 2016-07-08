@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import javax.servlet.http.HttpSession;
 
 import json.JsonConverter;
 import mappers.UserMapper;
@@ -22,7 +23,7 @@ public class LoginController {
 	Encrypt encrypter;
 
 	@RequestMapping(value = "/login", method = RequestMethod.POST, headers = "Accept=application/json")
-	public String handleLogin(@RequestBody String jsonUserString){
+	public String handleLogin(@RequestBody String jsonUserString,HttpSession session){
 		// Bind the incoming json to class.
 		UserLogin jsonUser = jconverter.ConvertJsonToUserLoginObject(jsonUserString);
 		
@@ -36,6 +37,8 @@ public class LoginController {
 				String encryptedPassword = dbUser.getPassword();
 				
 				if (encrypter.compareEncryptedAndRaw(rawPassword, encryptedPassword)) {
+					session.setAttribute("user", dbUser.getEmail());
+					session.setMaxInactiveInterval(45);
 					//Now we need to give him session and return his data.
 					return "true";
 				}
@@ -60,4 +63,7 @@ public class LoginController {
 		}
 		return jconverter.ConvertObjectToJsonString(new Error("forgottenPassword","Wrong json format."));
 	}
+	
+	@RequestMapping(value = "/keepalive", method = RequestMethod.POST)
+	public void dummyFunction() { }
 }
