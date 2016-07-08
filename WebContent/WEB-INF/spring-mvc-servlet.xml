@@ -10,11 +10,12 @@
   
  <mvc:annotation-driven/>  
 <context:component-scan base-package="controllers" />  
+<context:property-placeholder location="/WEB-INF/jdbc.properties"/>
 <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-  <property name="driverClassName" value="oracle.jdbc.driver.OracleDriver" />
-  <property name="url" value="jdbc:oracle:thin:@localhost:1521/xe" />
-  <property name="username" value="codecool" />
-  <property name="password" value="codecoolapp" />
+   <property name="driverClassName" value="${jdbc.driverClassName}" />
+  <property name="url" value="${jdbc.url}" />
+  <property name="username" value="${jdbc.username}" />
+  <property name="password" value="${jdbc.password}" />
 </bean>
 <tx:annotation-driven transaction-manager="transactionManager" />
 <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
@@ -23,7 +24,6 @@
 <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
   <property name="dataSource" ref="dataSource" />
   <property name="typeAliasesPackage" value="pojos"/>
-<!--   <property name="mapperLocations" value="classpath*:mappers/*.xml" /> -->
   <property name="configLocation" value="WEB-INF/sqlmap-config.xml" />  
   </bean>
 <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
