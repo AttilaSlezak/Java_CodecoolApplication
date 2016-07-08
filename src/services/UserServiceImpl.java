@@ -12,8 +12,8 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private UserMapper userMapper;
 
-	public boolean getUserByEmail(String email) {
-		UserLogin userLogin = userMapper.getUserByEmail(email);
+	public boolean getUserLoginByEmail(String email) {
+		UserLogin userLogin = userMapper.getUserLoginByEmail(email);
 		return (userLogin != null);
 	}
 }
