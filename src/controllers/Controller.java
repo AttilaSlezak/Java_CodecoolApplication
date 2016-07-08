@@ -33,9 +33,11 @@ public class Controller {
 	 System.out.println(user.toString());
 	 System.out.println(login.toString());
 	 System.out.println(login.getEmail().toString());
-	 UserLogin valami = usermapper.getUserByEmail("valaki@gmail.com");
+	 UserLogin valami = usermapper.getUserByEmail("henrik.ibsen@gmail.com");
 	 if (valami != null)
 		 System.out.println(valami.getPassword());
+	 else
+		 System.out.println("Nincs ilyen.");
 	 return user.toString();
  }
  
