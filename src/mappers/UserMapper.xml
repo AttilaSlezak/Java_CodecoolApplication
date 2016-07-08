@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 	
-	<mapper namespace="mappers">
-	<select id="getUserByEmail" resultType="HashMap" parameterType="map">
+	<mapper namespace="mappers.UserMapper">
+	<select id="getUserByEmail" resultType="userlogin" parameterType="java.lang.String">
 			SELECT 
-				EMAIL , PASSWORD
+				EMAIL , USER_PASSWORD as PASSWORD
 			FROM
 				APPLICANTS
 			WHERE

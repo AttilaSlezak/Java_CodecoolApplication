@@ -6,7 +6,6 @@ import pojos.UserLogin;
 
 public interface UserMapper {
 
-	@Select("SELECT * FROM APPLICANTS WHERE EMAIL = #{email}")
+	//@Select("SELECT * FROM APPLICANTS WHERE EMAIL = #{email}")
 	public UserLogin getUserByEmail(String email);
-
 }
