@@ -2,12 +2,26 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 	
 	<mapper namespace="mappers.UserMapper">
-	<select id="getUserByEmail" resultType="userlogin" parameterType="java.lang.String">
-			SELECT 
-				EMAIL , USER_PASSWORD as PASSWORD
-			FROM
-				APPLICANTS
-			WHERE
-				EMAIL = #{email}
+	<select id="getUserLoginByEmail" resultType="userlogin" parameterType="java.lang.String">
+		SELECT 
+			EMAIL , USER_PASSWORD as PASSWORD
+		FROM
+			APPLICANTS
+		WHERE
+			EMAIL = #{email}
 	</select>
+	<select id="getUser" resultType="user" parameterType="java.lang.String">
+		SELECT
+			USER_ID as USERID, SURNAME, FIRST_NAME as FIRSTNAME, EMAIL, ADDRESS, PHONE, 
+			STATE_OF_APPLICATION as STATEOFAPPLICATION, DATE_OF_REGISTRATION as DATEOFREGISTRATION,
+			DATE_OF_LAST_LOGIN as DATEOFLASTLOGIN
+		FROM
+			APPLICANTS
+		WHERE
+			EMAIL = #{email}
+	</select>
+	<insert id="insertUser">
+		INSERT INTO APPLICANTS VALUES 
+		(USERID, SURNAME, FIRSTNAME, EMAIL, ADDRESS, PHONE, STATEOFAPPLICATION, SYSDATE, SYSDATE)
+	</insert>
 	</mapper>
