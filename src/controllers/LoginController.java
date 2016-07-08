@@ -29,7 +29,7 @@ public class LoginController {
 		
 		if (jsonUser != null) {
 			// Get the user with the email that came from json from db.
-			UserLogin dbUser = usermapper.getUserByEmail(jsonUser.getEmail());
+			UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
 			
 			if (dbUser != null) {
 				// Compare the two password.
@@ -54,7 +54,7 @@ public class LoginController {
 		UserLogin jsonUser = jconverter.ConvertJsonToUserLoginObject(emailJson);
 		
 		if (jsonUser != null) {
-			UserLogin dbUser = usermapper.getUserByEmail(jsonUser.getEmail());
+			UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
 			if (dbUser != null) {
 				//Send email to the dbuser.getEmail();
 				return "";
