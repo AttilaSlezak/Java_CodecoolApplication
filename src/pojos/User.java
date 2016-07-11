@@ -10,6 +10,10 @@ public class User {
 	private String address;
 	private String phone;
 	private int stateOfApplication;
+	private int resultTestAcceptance;
+	private int resultTestEngligh;
+	private int resultTestLogic;
+	private int resultTestMotivation;
 	private Date dateOfRegistration;
 	private Date dateOfLastLogin;
 	
@@ -54,6 +58,30 @@ public class User {
 	}
 	public void setStateOfApplication(int stateOfApplication) {
 		this.stateOfApplication = stateOfApplication;
+	}
+	public int getResultTestAcceptance() {
+		return resultTestAcceptance;
+	}
+	public void setResultTestAcceptance(int resultTestAcceptance) {
+		this.resultTestAcceptance = resultTestAcceptance;
+	}
+	public int getResultTestEngligh() {
+		return resultTestEngligh;
+	}
+	public void setResultTestEngligh(int resultTestEngligh) {
+		this.resultTestEngligh = resultTestEngligh;
+	}
+	public int getResultTestLogic() {
+		return resultTestLogic;
+	}
+	public void setResultTestLogic(int resultTestLogic) {
+		this.resultTestLogic = resultTestLogic;
+	}
+	public int getResultTestMotivation() {
+		return resultTestMotivation;
+	}
+	public void setResultTestMotivation(int resultTestMotivation) {
+		this.resultTestMotivation = resultTestMotivation;
 	}
 	public Date getDateOfRegistration() {
 		return dateOfRegistration;

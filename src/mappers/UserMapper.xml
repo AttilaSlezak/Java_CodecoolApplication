@@ -20,8 +20,9 @@
 		WHERE
 			EMAIL = #{email}
 	</select>
-	<insert id="insertUser">
+	<insert id="insertUser" parameterType="User">
 		INSERT INTO APPLICANTS VALUES 
-		(USERID, SURNAME, FIRSTNAME, EMAIL, ADDRESS, PHONE, STATEOFAPPLICATION, SYSDATE, SYSDATE)
+		(#{userID}, #{surname}, #{firstName}, #{email}, #{address}, #{phone}, #{stateOfApplication}, 
+		SYSDATE, SYSDATE)
 	</insert>
 	</mapper>
