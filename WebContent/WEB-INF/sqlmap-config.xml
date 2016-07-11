@@ -11,4 +11,4 @@
     <typeAliases>
         <typeAlias type="pojos.UserLogin" alias="userlogin"/>
     </typeAliases>
-</configuration>
+</configuration>	

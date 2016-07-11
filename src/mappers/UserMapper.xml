@@ -25,4 +25,9 @@
 		(#{userID}, #{surname}, #{firstName}, #{email}, #{address}, #{phone}, #{stateOfApplication}, 
 		SYSDATE, SYSDATE)
 	</insert>
+	<update id="updateUser" parameterType="java.lang.String,java.lang.String">
+		UPDATE TABLE APPLICANTS
+		SET USER_PASSWORD = #{password}
+		WHERE EMAIL = #{email}
+	</update>
 	</mapper>
