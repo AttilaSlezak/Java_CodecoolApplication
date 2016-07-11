@@ -26,14 +26,14 @@ public class LoginController {
 
 	@Autowired
 	UserMapper usermapper;
-	JsonConverter jconverter;
-	Encrypt encrypter;
+	JsonConverter jconverter = new JsonConverter();
+	Encrypt encrypter = new Encrypt();
 	GmailSender emailSender;
 
 	@RequestMapping(value = "/login", method = RequestMethod.POST, headers = "Accept=application/json")
 	public String handleLogin(@RequestBody String jsonUserString,HttpSession session){
 		// Bind the incoming json to class.
-		UserLogin jsonUser = jconverter.ConvertJsonToUserLoginObject(jsonUserString);
+		UserLogin jsonUser = jconverter.convertJsonToUserLoginObject(jsonUserString);
 		
 		if (jsonUser != null) {
 			// Get the user with the email that came from json from db.
@@ -47,18 +47,18 @@ public class LoginController {
 				if (encrypter.compareEncryptedAndRaw(rawPassword, encryptedPassword)) {
 					session.setAttribute("user", dbUser.getEmail());
 					session.setMaxInactiveInterval(45);
-					return jconverter.ConvertObjectToJsonString(new Success("login", dbUser.getEmail())); 
+					return jconverter.convertObjectToJsonString(new Success("login", dbUser.getEmail())); 
 				}
-				return jconverter.ConvertObjectToJsonString(new Error("login","Password does not match."));
+				return jconverter.convertObjectToJsonString(new Error("login","Password does not match."));
 			}
-			return jconverter.ConvertObjectToJsonString(new Error("login","No user with this email."));
+			return jconverter.convertObjectToJsonString(new Error("login","No user with this email."));
 		}
-		return jconverter.ConvertObjectToJsonString(new Error("login","Wrong json format."));
+		return jconverter.convertObjectToJsonString(new Error("login","Wrong json format."));
 	}
 
 	@RequestMapping(value = "/forgottenPassword", method = RequestMethod.POST, headers = "Accept=application/json")
 	public String handleForgottenPassword(@RequestBody String emailJson) {
-		UserLogin jsonUser = jconverter.ConvertJsonToUserLoginObject(emailJson);
+		UserLogin jsonUser = jconverter.convertJsonToUserLoginObject(emailJson);
 		
 		if (jsonUser != null) {
 			UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
@@ -69,25 +69,25 @@ public class LoginController {
 				{
 					usermapper.updatePassword(dbUser.getEmail(), encrypted);
 					emailSender.sendPassword(dbUser.getEmail(), pswd);
-					return jconverter.ConvertObjectToJsonString(new Success("forgottenPassword", dbUser.getEmail()));
+					return jconverter.convertObjectToJsonString(new Success("forgottenPassword", dbUser.getEmail()));
 				}
 				catch(MessagingException | IOException e) {
 					e.printStackTrace();
-					return jconverter.ConvertObjectToJsonString(new Error("forgottenPassword", "unable to send email"));
+					return jconverter.convertObjectToJsonString(new Error("forgottenPassword", "unable to send email"));
 				}
 			}
-			return jconverter.ConvertObjectToJsonString(new Error("forgottenPassword","No user with this email."));
+			return jconverter.convertObjectToJsonString(new Error("forgottenPassword","No user with this email."));
 		}
-		return jconverter.ConvertObjectToJsonString(new Error("forgottenPassword","Wrong json format."));
+		return jconverter.convertObjectToJsonString(new Error("forgottenPassword","Wrong json format."));
 	}
 	
 	@RequestMapping(value = "/keepalive", method = RequestMethod.POST)
 	public String dummyFunction(HttpSession session) {
 		if (session.getAttribute("user") == null)
-			return jconverter.ConvertObjectToJsonString(new Error("keepalive", "You are not logged in."));
+			return jconverter.convertObjectToJsonString(new Error("keepalive", "You are not logged in."));
 		UserLogin dbUser = usermapper.getUserLoginByEmail((String)session.getAttribute("user"));
 		if (dbUser == null)
-			return jconverter.ConvertObjectToJsonString(new Error("keepalive", "You are not logged in."));
-		return jconverter.ConvertObjectToJsonString(new Success("keepalive", dbUser.getEmail()));
+			return jconverter.convertObjectToJsonString(new Error("keepalive", "You are not logged in."));
+		return jconverter.convertObjectToJsonString(new Success("keepalive", dbUser.getEmail()));
 	}
 }

@@ -10,7 +10,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import pojos.UserLogin;
 
 public class JsonConverter {
-	public String ConvertObjectToJsonString(Object object) {
+	public String convertObjectToJsonString(Object object) {
 		ObjectMapper mapper = new ObjectMapper();
 		String jsonInString = null;
 		try {
@@ -25,7 +25,7 @@ public class JsonConverter {
 		return jsonInString;  
 	}
 	
-	public UserLogin ConvertJsonToUserLoginObject(String json){
+	public UserLogin convertJsonToUserLoginObject(String json){
 		ObjectMapper mapper = new ObjectMapper();
 		UserLogin login = null;
 		try {
