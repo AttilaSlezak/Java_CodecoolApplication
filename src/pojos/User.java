@@ -9,6 +9,7 @@ public class User {
 	private String email;
 	private String address;
 	private String phone;
+	private String userPassword;
 	private int stateOfApplication;
 	private int resultTestAcceptance;
 	private int resultTestEngligh;
@@ -52,6 +53,12 @@ public class User {
 	}
 	public void setPhone(String phone) {
 		this.phone = phone;
+	}
+	public String getUserPassword() {
+		return userPassword;
+	}
+	public void setUserPassword(String userPassword) {
+		this.userPassword = userPassword;
 	}
 	public int getStateOfApplication() {
 		return stateOfApplication;

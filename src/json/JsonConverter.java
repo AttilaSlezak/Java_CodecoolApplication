@@ -7,6 +7,7 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import pojos.User;
 import pojos.UserLogin;
 
 public class JsonConverter {
@@ -38,5 +39,20 @@ public class JsonConverter {
 			e.printStackTrace();
 		}
 		return login;
+	}
+	
+	public User convertJsonToUserObject(String json){
+		ObjectMapper mapper = new ObjectMapper();
+		User user = null;
+		try {
+			user = mapper.readValue(json, User.class);
+		} catch (JsonParseException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return user;
 	}
 }

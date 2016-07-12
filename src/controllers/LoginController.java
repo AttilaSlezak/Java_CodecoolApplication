@@ -2,8 +2,11 @@ package controllers;
 
 import pojos.Error;
 import pojos.Success;
+import pojos.User;
 import pojos.UserLogin;
 import security.Encrypt;
+import services.UserService;
+import services.UserServiceImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
@@ -28,6 +32,8 @@ public class LoginController {
 	UserMapper usermapper;
 	JsonConverter jconverter = new JsonConverter();
 	Encrypt encrypter = new Encrypt();
+	UserService userservice = new UserServiceImpl();
+	@Autowired
 	GmailSender emailSender;
 
 	@RequestMapping(value = "/login", method = RequestMethod.POST, headers = "Accept=application/json")
@@ -49,11 +55,11 @@ public class LoginController {
 					session.setMaxInactiveInterval(45);
 					return jconverter.convertObjectToJsonString(new Success("login", dbUser.getEmail())); 
 				}
-				return jconverter.convertObjectToJsonString(new Error("login","Password does not match."));
+				return jconverter.convertObjectToJsonString(new Error("login","Wrong email and/or password."));
 			}
-			return jconverter.convertObjectToJsonString(new Error("login","No user with this email."));
+			return jconverter.convertObjectToJsonString(new Error("login","Wrong email and/or password."));
 		}
-		return jconverter.convertObjectToJsonString(new Error("login","Wrong json format."));
+		return jconverter.convertObjectToJsonString(new Error("login","Wrong HTTP request format."));
 	}
 
 	@RequestMapping(value = "/forgottenPassword", method = RequestMethod.POST, headers = "Accept=application/json")
@@ -78,9 +84,40 @@ public class LoginController {
 			}
 			return jconverter.convertObjectToJsonString(new Error("forgottenPassword","No user with this email."));
 		}
-		return jconverter.convertObjectToJsonString(new Error("forgottenPassword","Wrong json format."));
+		return jconverter.convertObjectToJsonString(new Error("forgottenPassword","Wrong HTTP request format."));
 	}
 	
+	@RequestMapping(value = "/registration", method = RequestMethod.POST, headers = "Accept=application/json")
+	public String handleRegistration(@RequestBody String jsonUserString,HttpSession session){
+		// Bind the incoming json to class.
+		User jsonUser = jconverter.convertJsonToUserObject(jsonUserString);
+		//UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
+		if (jsonUser != null) {
+			if (userservice.validateUser(jsonUser)) {
+				String pswd = PasswordGenerator.GeneratePassword();
+				String encrypted = encrypter.encryptPassword(pswd);
+				String uniqueID = UUID.randomUUID().toString();
+				System.out.println("Itt van");
+				try {
+					emailSender.sendPassword(jsonUser.getEmail(), pswd);
+				}
+				catch (MessagingException | IOException e) {
+					e.printStackTrace();
+					return jconverter.convertObjectToJsonString(new Error("registration", "unable to send email"));
+				}
+				jsonUser.setUserPassword(encrypted);
+				jsonUser.setUserID(uniqueID);
+				jsonUser.setStateOfApplication(0);
+				jsonUser.setAddress("");
+				jsonUser.setPhone("");
+				usermapper.insertUser(jsonUser);
+				return jconverter.convertObjectToJsonString(new Success("registration","Successful registration."));
+			}
+			return jconverter.convertObjectToJsonString(new Error("registration","Registration form is invalid."));
+		}
+		return jconverter.convertObjectToJsonString(new Error("registration","Wrong HTTP request format."));
+	}
+		
 	@RequestMapping(value = "/keepalive", method = RequestMethod.POST)
 	public String dummyFunction(HttpSession session) {
 		if (session.getAttribute("user") == null)
