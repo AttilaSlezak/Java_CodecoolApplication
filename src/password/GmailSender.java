@@ -169,7 +169,7 @@ public class GmailSender
     }
 	
 	public void sendPassword(String user, String password) throws IOException, MessagingException {
-		String body = "Dear Applicant!\nHere is your password: {}\nThis is an automatically generated message, please do not reply!\nBest regards,\nCodecool";
+		String body = "Dear Applicant!\nHere is your password: %s\nThis is an automatically generated message, please do not reply!\nBest regards,\nCodecool";
 		sendMessage(createEmail(user, "Your authentication data", String.format(body, password)));
 	}
 
