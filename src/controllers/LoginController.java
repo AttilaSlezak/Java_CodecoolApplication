@@ -37,92 +37,94 @@ public class LoginController {
 	GmailSender emailSender;
 
 	@RequestMapping(value = "/login", method = RequestMethod.POST, headers = "Accept=application/json")
-	public String handleLogin(@RequestBody String jsonUserString,HttpSession session){
+	public String handleLogin(@RequestBody String jsonUserString, HttpSession session) {
 		// Bind the incoming json to class.
 		UserLogin jsonUser = jconverter.convertJsonToUserLoginObject(jsonUserString);
-		
+
 		if (jsonUser != null) {
 			// Get the user with the email that came from json from db.
 			UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
-			
+
 			if (dbUser != null) {
 				// Compare the two password.
 				String rawPassword = jsonUser.getPassword();
 				String encryptedPassword = dbUser.getPassword();
-				
+
 				if (encrypter.compareEncryptedAndRaw(rawPassword, encryptedPassword)) {
 					session.setAttribute("user", dbUser.getEmail());
 					session.setMaxInactiveInterval(45);
-					return jconverter.convertObjectToJsonString(new Success("login", dbUser.getEmail())); 
+					return jconverter.convertObjectToJsonString(new Success("login", dbUser.getEmail()));
 				}
-				return jconverter.convertObjectToJsonString(new Error("login","Wrong email and/or password."));
+				return jconverter.convertObjectToJsonString(new Error("login", "Wrong email and/or password."));
 			}
-			return jconverter.convertObjectToJsonString(new Error("login","Wrong email and/or password."));
+			return jconverter.convertObjectToJsonString(new Error("login", "Wrong email and/or password."));
 		}
-		return jconverter.convertObjectToJsonString(new Error("login","Wrong HTTP request format."));
+		return jconverter.convertObjectToJsonString(new Error("login", "Wrong HTTP request format."));
 	}
 
 	@RequestMapping(value = "/forgottenPassword", method = RequestMethod.POST, headers = "Accept=application/json")
 	public String handleForgottenPassword(@RequestBody String emailJson) {
 		UserLogin jsonUser = jconverter.convertJsonToUserLoginObject(emailJson);
-		
+
 		if (jsonUser != null) {
 			UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
 			if (dbUser != null) {
 				String pswd = PasswordGenerator.GeneratePassword();
 				String encrypted = encrypter.encryptPassword(pswd);
-				try
-				{
+				try {
 					usermapper.updatePassword(dbUser.getEmail(), encrypted);
 					emailSender.sendPassword(dbUser.getEmail(), pswd);
 					return jconverter.convertObjectToJsonString(new Success("forgottenPassword", dbUser.getEmail()));
-				}
-				catch(MessagingException | IOException e) {
+				} catch (MessagingException | IOException e) {
 					e.printStackTrace();
 					return jconverter.convertObjectToJsonString(new Error("forgottenPassword", "unable to send email"));
 				}
 			}
-			return jconverter.convertObjectToJsonString(new Error("forgottenPassword","No user with this email."));
+			return jconverter.convertObjectToJsonString(new Error("forgottenPassword", "No user with this email."));
 		}
-		return jconverter.convertObjectToJsonString(new Error("forgottenPassword","Wrong HTTP request format."));
+		return jconverter.convertObjectToJsonString(new Error("forgottenPassword", "Wrong HTTP request format."));
 	}
-	
+
 	@RequestMapping(value = "/registration", method = RequestMethod.POST, headers = "Accept=application/json")
-	public String handleRegistration(@RequestBody String jsonUserString,HttpSession session){
+	public String handleRegistration(@RequestBody String jsonUserString, HttpSession session) {
 		// Bind the incoming json to class.
 		User jsonUser = jconverter.convertJsonToUserObject(jsonUserString);
-		//UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
-		if (jsonUser != null) {
-			if (userservice.validateUser(jsonUser)) {
-				String pswd = PasswordGenerator.GeneratePassword();
-				String encrypted = encrypter.encryptPassword(pswd);
-				String uniqueID = UUID.randomUUID().toString();
-				System.out.println("Itt van");
-				try {
-					emailSender.sendPassword(jsonUser.getEmail(), pswd);
+		UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
+		if (jsonUser.getEmail() != null && jsonUser.getEmail() != "") {
+			if (dbUser == null) {
+				if (userservice.validateUser(jsonUser)) {
+					String pswd = PasswordGenerator.GeneratePassword();
+					String encrypted = encrypter.encryptPassword(pswd);
+					String uniqueID = UUID.randomUUID().toString();
+					System.out.println("Itt van");
+					try {
+						emailSender.sendPassword(jsonUser.getEmail(), pswd);
+					} catch (MessagingException | IOException e) {
+						e.printStackTrace();
+						return jconverter.convertObjectToJsonString(new Error("registration", "unable to send email"));
+					}
+					jsonUser.setUserPassword(encrypted);
+					jsonUser.setUserID(uniqueID);
+					jsonUser.setStateOfApplication(0);
+					jsonUser.setAddress("");
+					jsonUser.setPhone("");
+					usermapper.insertUser(jsonUser);
+					return jconverter
+							.convertObjectToJsonString(new Success("registration", "Successful registration."));
 				}
-				catch (MessagingException | IOException e) {
-					e.printStackTrace();
-					return jconverter.convertObjectToJsonString(new Error("registration", "unable to send email"));
-				}
-				jsonUser.setUserPassword(encrypted);
-				jsonUser.setUserID(uniqueID);
-				jsonUser.setStateOfApplication(0);
-				jsonUser.setAddress("");
-				jsonUser.setPhone("");
-				usermapper.insertUser(jsonUser);
-				return jconverter.convertObjectToJsonString(new Success("registration","Successful registration."));
+				return jconverter.convertObjectToJsonString(new Error("registration", "Registration form is invalid."));
 			}
-			return jconverter.convertObjectToJsonString(new Error("registration","Registration form is invalid."));
+			return jconverter
+					.convertObjectToJsonString(new Error("registration", "The given email is already registrated."));
 		}
-		return jconverter.convertObjectToJsonString(new Error("registration","Wrong HTTP request format."));
+		return jconverter.convertObjectToJsonString(new Error("registration", "Wrong HTTP request format."));
 	}
-		
+
 	@RequestMapping(value = "/keepalive", method = RequestMethod.POST)
 	public String dummyFunction(HttpSession session) {
 		if (session.getAttribute("user") == null)
 			return jconverter.convertObjectToJsonString(new Error("keepalive", "You are not logged in."));
-		UserLogin dbUser = usermapper.getUserLoginByEmail((String)session.getAttribute("user"));
+		UserLogin dbUser = usermapper.getUserLoginByEmail((String) session.getAttribute("user"));
 		if (dbUser == null)
 			return jconverter.convertObjectToJsonString(new Error("keepalive", "You are not logged in."));
 		return jconverter.convertObjectToJsonString(new Success("keepalive", dbUser.getEmail()));
