@@ -53,6 +53,7 @@ public class LoginController {
 				if (encrypter.compareEncryptedAndRaw(rawPassword, encryptedPassword)) {
 					session.setAttribute("user", dbUser.getEmail());
 					session.setMaxInactiveInterval(45);
+					usermapper.updateLastLogin(dbUser);
 					return jconverter.convertObjectToJsonString(new Success("login", dbUser.getEmail()));
 				}
 				return jconverter.convertObjectToJsonString(new Error("login", "Wrong email and/or password."));
@@ -71,8 +72,9 @@ public class LoginController {
 			if (dbUser != null) {
 				String pswd = PasswordGenerator.GeneratePassword();
 				String encrypted = encrypter.encryptPassword(pswd);
+				dbUser.setPassword(encrypted);
 				try {
-					usermapper.updatePassword(dbUser.getEmail(), encrypted);
+					usermapper.updatePassword(dbUser);
 					emailSender.sendPassword(dbUser.getEmail(), pswd);
 					return jconverter.convertObjectToJsonString(new Success("forgottenPassword", dbUser.getEmail()));
 				} catch (MessagingException | IOException e) {
@@ -96,7 +98,6 @@ public class LoginController {
 					String pswd = PasswordGenerator.GeneratePassword();
 					String encrypted = encrypter.encryptPassword(pswd);
 					String uniqueID = UUID.randomUUID().toString();
-					System.out.println("Itt van");
 					try {
 						emailSender.sendPassword(jsonUser.getEmail(), pswd);
 					} catch (MessagingException | IOException e) {
