@@ -40,10 +40,14 @@ public class LoginController {
 	public String handleLogin(@RequestBody String jsonUserString, HttpSession session) {
 		// Bind the incoming json to class.
 		UserLogin jsonUser = jconverter.convertJsonToUserLoginObject(jsonUserString);
-
+		
 		if (jsonUser != null) {
 			// Get the user with the email that came from json from db.
 			UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
+			
+			if (session.getAttribute("user") != null) {
+				return jconverter.convertObjectToJsonString(new Error("login", "You are already logged in."));
+			}
 
 			if (dbUser != null) {
 				// Compare the two password.
@@ -54,7 +58,7 @@ public class LoginController {
 					session.setAttribute("user", dbUser.getEmail());
 					session.setMaxInactiveInterval(45);
 					usermapper.updateLastLogin(dbUser);
-					return jconverter.convertObjectToJsonString(new Success("login", dbUser.getEmail()));
+					return jconverter.convertObjectToJsonString(new Success("login", dbUser.getEmail() + " logged in successfully"));
 				}
 				return jconverter.convertObjectToJsonString(new Error("login", "Wrong email and/or password."));
 			}
@@ -76,7 +80,7 @@ public class LoginController {
 				try {
 					usermapper.updatePassword(dbUser);
 					emailSender.sendPassword(dbUser.getEmail(), pswd);
-					return jconverter.convertObjectToJsonString(new Success("forgottenPassword", dbUser.getEmail()));
+					return jconverter.convertObjectToJsonString(new Success("forgottenPassword", "Message sent to: " + dbUser.getEmail()));
 				} catch (MessagingException | IOException e) {
 					e.printStackTrace();
 					return jconverter.convertObjectToJsonString(new Error("forgottenPassword", "unable to send email"));
@@ -121,6 +125,15 @@ public class LoginController {
 		return jconverter.convertObjectToJsonString(new Error("registration", "Wrong HTTP request format."));
 	}
 
+	@RequestMapping(value = "/logout", method = RequestMethod.POST)
+	public String handleLogout(HttpSession session) {
+		if (session.getAttribute("user") != null) {
+			session.invalidate();
+			return jconverter.convertObjectToJsonString(new Success("logout", "You have been successfully logged out."));
+		}
+		return jconverter.convertObjectToJsonString(new Error("logout", "You are already logged out."));
+	}
+	
 	@RequestMapping(value = "/keepalive", method = RequestMethod.POST)
 	public String dummyFunction(HttpSession session) {
 		if (session.getAttribute("user") == null)
@@ -128,6 +141,7 @@ public class LoginController {
 		UserLogin dbUser = usermapper.getUserLoginByEmail((String) session.getAttribute("user"));
 		if (dbUser == null)
 			return jconverter.convertObjectToJsonString(new Error("keepalive", "You are not logged in."));
+		//System.out.println(session.getMaxInactiveInterval());
 		return jconverter.convertObjectToJsonString(new Success("keepalive", dbUser.getEmail()));
 	}
 }

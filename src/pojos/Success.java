@@ -7,11 +7,11 @@ public class Success {
 
 	Map<String, String> success;
 
-	public Success(String operation, String email) {
+	public Success(String operation, String message) {
 		super();
 		this.success = new HashMap<>();
 		this.success.put("operation", operation);
-		this.success.put("email", email);
+		this.success.put("message", message);
 	}
 
 	public Map<String, String> getSuccess() {
