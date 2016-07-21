@@ -11,12 +11,10 @@
 	<!-- Spring's scheduling support -->
 	<task:scheduled-tasks scheduler="taskScheduler">
 		<task:scheduled ref="dailyScheduledService" method="performService" cron="0 0 12 * * *"/>
-		<task:scheduled ref="weeklyScheduledService" method="performService" cron="5 8 * * Sat"/>
 	</task:scheduled-tasks>
 	
 	<!-- The bean that does the actual work -->
 	<bean id="dailyScheduledService" class="scheduledTasks.DailyService" />
-	<bean id="weeklyScheduledService" class="scheduledTasks.WeeklyService" />
 	
 	<!-- Defines a ThreadPoolTaskScheduler instance with configurable pool size. -->
 	<task:scheduler id="taskScheduler" pool-size="1"/>      
