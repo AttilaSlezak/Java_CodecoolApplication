@@ -1,7 +1,6 @@
 package pojos;
 
 import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 @JsonAutoDetect
 public class UserLogin {
