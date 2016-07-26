@@ -1,6 +1,7 @@
 package controllers;
 
 import pojos.Error;
+import pojos.Response;
 import pojos.Success;
 import pojos.User;
 import pojos.UserLogin;
@@ -9,6 +10,9 @@ import services.UserService;
 import services.UserServiceImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -36,17 +40,16 @@ public class LoginController {
 	@Autowired
 	GmailSender emailSender;
 
-	@RequestMapping(value = "/login", method = RequestMethod.POST, headers = "Accept=application/json")
-	public String handleLogin(@RequestBody String jsonUserString, HttpSession session) {
-		// Bind the incoming json to class.
-		UserLogin jsonUser = jconverter.convertJsonToUserLoginObject(jsonUserString);
+	@RequestMapping(value = "/login", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Response> handleLogin(@RequestBody UserLogin jsonUser, HttpSession session) {
 		
 		if (jsonUser != null) {
 			// Get the user with the email that came from json from db.
+			System.out.println(jsonUser.getEmail());
 			UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
 			
 			if (session.getAttribute("user") != null) {
-				return jconverter.convertObjectToJsonString(new Error("login", "You are already logged in."));
+				return new ResponseEntity<Response>(new Error("login", "You are already logged in."), HttpStatus.CONFLICT);
 			}
 
 			if (dbUser != null) {
@@ -58,18 +61,17 @@ public class LoginController {
 					session.setAttribute("user", dbUser.getEmail());
 					session.setMaxInactiveInterval(45);
 					usermapper.updateLastLogin(dbUser);
-					return jconverter.convertObjectToJsonString(new Success("login", dbUser.getEmail() + " logged in successfully"));
+					return new ResponseEntity<Response>(new Success("login", dbUser.getEmail() + " logged in successfully"), HttpStatus.OK);
 				}
-				return jconverter.convertObjectToJsonString(new Error("login", "Wrong email and/or password."));
+				return new ResponseEntity<Response>(new Error("login", "Wrong email and/or password."), HttpStatus.FORBIDDEN);
 			}
-			return jconverter.convertObjectToJsonString(new Error("login", "Wrong email and/or password."));
+			return new ResponseEntity<Response>(new Error("login", "Wrong email and/or password."), HttpStatus.FORBIDDEN);
 		}
-		return jconverter.convertObjectToJsonString(new Error("login", "Wrong HTTP request format."));
+		return new ResponseEntity<Response>(new Error("login", "Wrong HTTP request format."), HttpStatus.UNPROCESSABLE_ENTITY);
 	}
 
 	@RequestMapping(value = "/forgottenPassword", method = RequestMethod.POST, headers = "Accept=application/json")
-	public String handleForgottenPassword(@RequestBody String emailJson) {
-		UserLogin jsonUser = jconverter.convertJsonToUserLoginObject(emailJson);
+	public ResponseEntity<Response> handleForgottenPassword(@RequestBody UserLogin jsonUser) {
 
 		if (jsonUser != null) {
 			UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
@@ -80,21 +82,20 @@ public class LoginController {
 				try {
 					usermapper.updatePassword(dbUser);
 					emailSender.sendPassword(dbUser.getEmail(), pswd);
-					return jconverter.convertObjectToJsonString(new Success("forgottenPassword", "Message sent to: " + dbUser.getEmail()));
+					return new ResponseEntity<Response>(new Success("forgottenPassword", "Message sent to: " + dbUser.getEmail()), HttpStatus.OK);
 				} catch (MessagingException | IOException e) {
 					e.printStackTrace();
-					return jconverter.convertObjectToJsonString(new Error("forgottenPassword", "unable to send email"));
+					return new ResponseEntity<Response>(new Error("forgottenPassword", "unable to send email"), HttpStatus.INTERNAL_SERVER_ERROR);
 				}
 			}
-			return jconverter.convertObjectToJsonString(new Error("forgottenPassword", "No user with this email."));
+			return new ResponseEntity<Response>(new Error("forgottenPassword", "No user with this email."), HttpStatus.OK);
 		}
-		return jconverter.convertObjectToJsonString(new Error("forgottenPassword", "Wrong HTTP request format."));
+		return new ResponseEntity<Response>(new Error("forgottenPassword", "Wrong HTTP request format."), HttpStatus.UNPROCESSABLE_ENTITY);
 	}
 
 	@RequestMapping(value = "/registration", method = RequestMethod.POST, headers = "Accept=application/json")
-	public String handleRegistration(@RequestBody String jsonUserString, HttpSession session) {
-		// Bind the incoming json to class.
-		User jsonUser = jconverter.convertJsonToUserObject(jsonUserString);
+	public ResponseEntity<Response> handleRegistration(@RequestBody User jsonUser, HttpSession session) {
+		
 		UserLogin dbUser = usermapper.getUserLoginByEmail(jsonUser.getEmail());
 		if (jsonUser.getEmail() != null && jsonUser.getEmail() != "") {
 			if (dbUser == null) {
@@ -106,7 +107,7 @@ public class LoginController {
 						emailSender.sendPassword(jsonUser.getEmail(), pswd);
 					} catch (MessagingException | IOException e) {
 						e.printStackTrace();
-						return jconverter.convertObjectToJsonString(new Error("registration", "unable to send email"));
+						return new ResponseEntity<Response>(new Error("registration", "unable to send email"), HttpStatus.INTERNAL_SERVER_ERROR);
 					}
 					jsonUser.setUserPassword(encrypted);
 					jsonUser.setUserID(uniqueID);
@@ -114,34 +115,32 @@ public class LoginController {
 					jsonUser.setAddress("");
 					jsonUser.setPhone("");
 					usermapper.insertUser(jsonUser);
-					return jconverter
-							.convertObjectToJsonString(new Success("registration", "Successful registration."));
+					return new ResponseEntity<Response>(new Success("registration", "Successful registration."), HttpStatus.OK);
 				}
-				return jconverter.convertObjectToJsonString(new Error("registration", "Registration form is invalid."));
+				return new ResponseEntity<Response>(new Error("registration", "Registration form is invalid."), HttpStatus.UNPROCESSABLE_ENTITY);
 			}
-			return jconverter
-					.convertObjectToJsonString(new Error("registration", "The given email is already registrated."));
+			return new ResponseEntity<Response>(new Error("registration", "The given email is already registrated."), HttpStatus.CONFLICT);
 		}
-		return jconverter.convertObjectToJsonString(new Error("registration", "Wrong HTTP request format."));
+		return new ResponseEntity<Response>(new Error("registration", "Wrong HTTP request format."), HttpStatus.UNPROCESSABLE_ENTITY);
 	}
 
 	@RequestMapping(value = "/logout", method = RequestMethod.POST)
-	public String handleLogout(HttpSession session) {
+	public ResponseEntity<Response> handleLogout(HttpSession session) {
 		if (session.getAttribute("user") != null) {
 			session.invalidate();
-			return jconverter.convertObjectToJsonString(new Success("logout", "You have been successfully logged out."));
+			return new ResponseEntity<Response>(new Success("logout", "You have been successfully logged out."), HttpStatus.OK);
 		}
-		return jconverter.convertObjectToJsonString(new Error("logout", "You are already logged out."));
+		return new ResponseEntity<Response>(new Error("logout", "You are already logged out."), HttpStatus.OK);
 	}
 	
 	@RequestMapping(value = "/keepalive", method = RequestMethod.POST)
-	public String dummyFunction(HttpSession session) {
+	public ResponseEntity<Response> dummyFunction(HttpSession session) {
 		if (session.getAttribute("user") == null)
-			return jconverter.convertObjectToJsonString(new Error("keepalive", "You are not logged in."));
+			return new ResponseEntity<Response>(new Error("keepalive", "You are not logged in."), HttpStatus.UNPROCESSABLE_ENTITY);
 		UserLogin dbUser = usermapper.getUserLoginByEmail((String) session.getAttribute("user"));
 		if (dbUser == null)
-			return jconverter.convertObjectToJsonString(new Error("keepalive", "You are not logged in."));
+			return new ResponseEntity<Response>(new Error("keepalive", "You are not logged in."), HttpStatus.UNPROCESSABLE_ENTITY);
 		//System.out.println(session.getMaxInactiveInterval());
-		return jconverter.convertObjectToJsonString(new Success("keepalive", dbUser.getEmail()));
+		return new ResponseEntity<Response>(new Success("keepalive", dbUser.getEmail()), HttpStatus.OK);
 	}
 }
