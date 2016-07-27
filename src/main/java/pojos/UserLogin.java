@@ -1,5 +1,8 @@
 package pojos;
 
+import org.codehaus.jackson.annotate.JsonAutoDetect;
+
+@JsonAutoDetect
 public class UserLogin {
 	private String email;
 	private String password;

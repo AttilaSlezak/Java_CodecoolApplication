@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class Error {
+public class Error implements Response {
 	Map<String, String> error;
 
 	public Error(String errorType,String errorMsg) {

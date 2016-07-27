@@ -3,7 +3,7 @@ package pojos;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Success {
+public class Success implements Response {
 
 	Map<String, String> success;
 
