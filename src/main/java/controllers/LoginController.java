@@ -71,7 +71,7 @@ public class LoginController {
 			session.invalidate();
 			return new ResponseEntity<Response>(new Success("logout", "You have been successfully logged out."), HttpStatus.OK);
 		}
-		return new ResponseEntity<Response>(new Error("logout", "You are already logged out."), HttpStatus.OK);
+		return new ResponseEntity<Response>(new Error("logout", "You are not logged in."), HttpStatus.OK);
 	}
 	
 	@RequestMapping(value = "/keepalive", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

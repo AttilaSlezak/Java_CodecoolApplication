@@ -71,6 +71,11 @@ public class RegistrationController {
 		return new ResponseEntity<Response>(new Error("registration", "Wrong HTTP request format."), HttpStatus.UNPROCESSABLE_ENTITY);
 	}
 	
+	@RequestMapping(value = "/changePassword/{id}", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Response> handlePassword(@RequestBody  HttpSession session) {
+		return new ResponseEntity<Response>(new Error("changePassword", "The two passwords do not match."), HttpStatus.UNPROCESSABLE_ENTITY);
+	}
+	
 	@RequestMapping(value = "/forgottenPassword", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Response> handleForgottenPassword(@RequestBody UserLogin jsonUser) {
 
